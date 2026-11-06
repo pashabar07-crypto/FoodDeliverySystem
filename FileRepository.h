@@ -9,27 +9,28 @@
 #include <vector>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
 template <typename T>
 class FileRepository {
-    std::vector<std::shared_ptr<T>> items;
-    std::string filename;
+    vector<shared_ptr<T>> items;
+    string filename;
 
 public:
-    FileRepository(std::string filename) : filename(filename) {}
+    FileRepository(string filename) : filename(filename) {}
 
-    void add(std::shared_ptr<T> item) {
+    void add(shared_ptr<T> item) {
         items.push_back(item);
     }
 
     bool removeById(int id) {
         size_t oldSize = items.size();
-        items.erase(std::remove_if(items.begin(), items.end(),
-            [id](std::shared_ptr<T> item) { return item->getId() == id; }), items.end());
+        items.erase(remove_if(items.begin(), items.end(),
+            [id](shared_ptr<T> item) { return item->getId() == id; }), items.end());
         return oldSize != items.size();
     }
 
-    std::shared_ptr<T> findById(int id) {
+    shared_ptr<T> findById(int id) {
         for (auto& item : items) {
             if (item->getId() == id) {
                 return item;
@@ -38,7 +39,7 @@ public:
         return nullptr;
     }
 
-    std::vector<std::shared_ptr<T>>& getAll() {
+    vector<shared_ptr<T>>& getAll() {
         return items;
     }
 
@@ -54,12 +55,13 @@ public:
 
     template <typename Compare>
     void sort(Compare compare) {
-        std::sort(items.begin(), items.end(), compare);
+        // stable_sort вместо sort: обычное имя sort нашло бы этот же метод
+        stable_sort(items.begin(), items.end(), compare);
     }
 
     template <typename Predicate>
-    std::vector<std::shared_ptr<T>> filter(Predicate predicate) {
-        std::vector<std::shared_ptr<T>> result;
+    vector<shared_ptr<T>> filter(Predicate predicate) {
+        vector<shared_ptr<T>> result;
         for (auto& item : items) {
             if (predicate(item)) {
                 result.push_back(item);
@@ -69,7 +71,7 @@ public:
     }
 
     void saveToFile() {
-        std::ofstream out(filename, std::ios::trunc);
+        ofstream out(filename, ios::trunc);
         if (!out.is_open()) {
             throw FileException("Не удалось открыть файл для записи: " + filename);
         }
@@ -88,14 +90,14 @@ public:
     }
 
     void loadFromFile() {
-        std::ifstream in(filename);
+        ifstream in(filename);
         if (!in.is_open()) {
             throw FileException("Не удалось открыть файл для чтения: " + filename);
         }
 
-        std::vector<std::shared_ptr<T>> loadedItems;
+        vector<shared_ptr<T>> loadedItems;
         while (true) {
-            std::shared_ptr<T> item = T::load(in);
+            shared_ptr<T> item = T::load(in);
             if (!item) {
                 break;
             }

@@ -4,6 +4,7 @@
 #include <string>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
 class Entity {
 protected:
@@ -18,8 +19,8 @@ public:
     void setId(int newId) { id = newId; }
     static int getTotalCount() { return totalCount; }
 
-    virtual std::string toString() = 0;
-    virtual void save(std::ostream& out) = 0;
+    virtual string toString() = 0;
+    virtual void save(ostream& out) = 0;
 };
 
 }

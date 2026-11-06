@@ -7,90 +7,91 @@
 #include <string>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
 class Order;
 
 class User : public Entity {
 protected:
-    std::string login;
-    std::string passwordHash;
+    string login;
+    string passwordHash;
 
-    void saveUser(std::ostream& out, std::string role, std::string position, std::string extra);
+    void saveUser(ostream& out, string role, string position, string extra);
 
 public:
-    User(int id, std::string login, std::string passwordHash);
+    User(int id, string login, string passwordHash);
     virtual ~User() = default;
 
-    bool authenticate(std::string password);
-    static std::string encryptPassword(std::string rawPassword);
-    void setPassword(std::string rawPassword);
+    bool authenticate(string password);
+    static string encryptPassword(string rawPassword);
+    void setPassword(string rawPassword);
 
-    std::string getLogin() { return login; }
-    void setLogin(std::string newLogin) { login = newLogin; }
+    string getLogin() { return login; }
+    void setLogin(string newLogin) { login = newLogin; }
 
-    virtual std::string getRole() = 0;
+    virtual string getRole() = 0;
     virtual void showMenu() = 0;
-    std::string toString() override;
+    string toString() override;
 
-    static std::shared_ptr<User> load(std::istream& in);
+    static shared_ptr<User> load(istream& in);
 
-    friend std::ostream& operator<<(std::ostream& out, User& user);
+    friend ostream& operator<<(ostream& out, User& user);
 };
 
 class Customer : public User {
-    std::string address;
+    string address;
 
 public:
-    Customer(int id, std::string login, std::string passwordHash, std::string address);
+    Customer(int id, string login, string passwordHash, string address);
 
-    std::string getAddress() { return address; }
-    void setAddress(std::string newAddress) { address = newAddress; }
+    string getAddress() { return address; }
+    void setAddress(string newAddress) { address = newAddress; }
 
-    std::string getRole() override { return "Клиент"; }
+    string getRole() override { return "Клиент"; }
     void showMenu() override;
-    std::string toString() override;
-    void save(std::ostream& out) override;
+    string toString() override;
+    void save(ostream& out) override;
 };
 
 class Staff : public User {
 protected:
-    std::string position;
+    string position;
 
 public:
-    Staff(int id, std::string login, std::string passwordHash, std::string position);
+    Staff(int id, string login, string passwordHash, string position);
 
-    std::string getPosition() { return position; }
-    void setPosition(std::string newPosition) { position = newPosition; }
-    std::string toString() override;
+    string getPosition() { return position; }
+    void setPosition(string newPosition) { position = newPosition; }
+    string toString() override;
 };
 
 class Courier : public Staff {
-    std::string vehicle;
+    string vehicle;
 
 public:
-    Courier(int id, std::string login, std::string passwordHash, std::string vehicle);
+    Courier(int id, string login, string passwordHash, string vehicle);
 
-    std::string getVehicle() { return vehicle; }
-    void setVehicle(std::string newVehicle) { vehicle = newVehicle; }
+    string getVehicle() { return vehicle; }
+    void setVehicle(string newVehicle) { vehicle = newVehicle; }
 
-    std::string getRole() override { return "Курьер"; }
+    string getRole() override { return "Курьер"; }
     void showMenu() override;
     void deliverOrder(Order& order);
-    void save(std::ostream& out) override;
+    void save(ostream& out) override;
 };
 
 class Admin : public Staff {
     int accessLevel;
 
 public:
-    Admin(int id, std::string login, std::string passwordHash, int accessLevel);
+    Admin(int id, string login, string passwordHash, int accessLevel);
 
     int getAccessLevel() { return accessLevel; }
     void setAccessLevel(int newAccessLevel) { accessLevel = newAccessLevel; }
 
-    std::string getRole() override { return "Администратор"; }
+    string getRole() override { return "Администратор"; }
     void showMenu() override;
-    void save(std::ostream& out) override;
+    void save(ostream& out) override;
 };
 
 }

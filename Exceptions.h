@@ -4,19 +4,20 @@
 #include <string>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
-class AppException : public std::exception {
+class AppException : public exception {
 protected:
-    std::string message;
+    string message;
 
 public:
-    AppException(std::string message) : message(message) {}
+    AppException(string message) : message(message) {}
     const char* what() const noexcept override { return message.c_str(); }
 };
 
 class FileException : public AppException {
 public:
-    FileException(std::string message) : AppException(message) {}
+    FileException(string message) : AppException(message) {}
 };
 
 class InsufficientFundsException : public AppException {

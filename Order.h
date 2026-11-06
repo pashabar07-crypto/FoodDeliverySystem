@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
 class Order : public Entity {
 public:
@@ -19,12 +20,12 @@ public:
 private:
     int customerId;
     int courierId;
-    std::vector<std::shared_ptr<Dish>> dishes;
-    std::vector<int> quantities;
-    std::unique_ptr<IPaymentMethod> payment;
-    std::string paymentType;
-    std::string status;
-    std::string deliveryAddress;
+    vector<shared_ptr<Dish>> dishes;
+    vector<int> quantities;
+    unique_ptr<IPaymentMethod> payment;
+    string paymentType;
+    string status;
+    string deliveryAddress;
     char* receiptBuffer;
 
 public:
@@ -36,19 +37,19 @@ public:
 
     int getCustomerId() { return customerId; }
     int getCourierId() { return courierId; }
-    std::string getStatus() { return status; }
-    std::string getPaymentType() { return paymentType; }
-    std::string getDeliveryAddress() { return deliveryAddress; }
-    std::vector<std::shared_ptr<Dish>>& getDishes() { return dishes; }
-    std::vector<int>& getQuantities() { return quantities; }
+    string getStatus() { return status; }
+    string getPaymentType() { return paymentType; }
+    string getDeliveryAddress() { return deliveryAddress; }
+    vector<shared_ptr<Dish>>& getDishes() { return dishes; }
+    vector<int>& getQuantities() { return quantities; }
 
     void setCourierId(int newCourierId) { courierId = newCourierId; }
-    void setStatus(std::string newStatus) { status = newStatus; }
-    void setDeliveryAddress(std::string newAddress) { deliveryAddress = newAddress; }
-    void setPayment(std::unique_ptr<IPaymentMethod> newPayment);
+    void setStatus(string newStatus) { status = newStatus; }
+    void setDeliveryAddress(string newAddress) { deliveryAddress = newAddress; }
+    void setPayment(unique_ptr<IPaymentMethod> newPayment);
 
-    void addDish(std::shared_ptr<Dish> dish);
-    void addDish(std::shared_ptr<Dish> dish, int quantity);
+    void addDish(shared_ptr<Dish> dish);
+    void addDish(shared_ptr<Dish> dish, int quantity);
     bool removeDish(int dishId);
     bool isEmpty() { return dishes.empty(); }
 
@@ -59,15 +60,15 @@ public:
     int calculateWaitingTime();
     bool payOrder();
 
-    std::string buildReceipt();
-    void saveReceiptReport(std::ostream& out);
-    std::string toString() override;
-    void save(std::ostream& out) override;
+    string buildReceipt();
+    void saveReceiptReport(ostream& out);
+    string toString() override;
+    void save(ostream& out) override;
 
-    static std::shared_ptr<Order> load(std::istream& in);
+    static shared_ptr<Order> load(istream& in);
 
-    Order& operator+=(std::shared_ptr<Dish> dish);
-    friend std::ostream& operator<<(std::ostream& out, Order& order);
+    Order& operator+=(shared_ptr<Dish> dish);
+    friend ostream& operator<<(ostream& out, Order& order);
 };
 
 }

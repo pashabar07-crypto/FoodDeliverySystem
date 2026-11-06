@@ -7,36 +7,37 @@
 #include <string>
 
 namespace FoodDeliverySystem {
+using namespace std;
 
 class Dish : public Entity {
-    std::string name;
-    std::string category;
+    string name;
+    string category;
     double price;
     bool isAvailable;
 
 public:
     Dish();
-    Dish(int id, std::string name, std::string category, double price, bool isAvailable);
+    Dish(int id, string name, string category, double price, bool isAvailable);
 
-    std::string getName() { return name; }
-    std::string getCategory() { return category; }
+    string getName() { return name; }
+    string getCategory() { return category; }
     double getPrice() { return price; }
     bool getAvailability() { return isAvailable; }
 
-    void setName(std::string newName);
-    void setCategory(std::string newCategory);
+    void setName(string newName);
+    void setCategory(string newCategory);
     void setPrice(double newPrice);
     void setAvailability(bool newAvailability) { isAvailable = newAvailability; }
 
-    std::string toString() override;
-    void save(std::ostream& out) override;
+    string toString() override;
+    void save(ostream& out) override;
 
-    static std::shared_ptr<Dish> fromLine(std::string line);
-    static std::shared_ptr<Dish> load(std::istream& in);
+    static shared_ptr<Dish> fromLine(string line);
+    static shared_ptr<Dish> load(istream& in);
 
     bool operator<(Dish& other);
-    friend std::ostream& operator<<(std::ostream& out, Dish& dish);
-    friend std::istream& operator>>(std::istream& in, Dish& dish);
+    friend ostream& operator<<(ostream& out, Dish& dish);
+    friend istream& operator>>(istream& in, Dish& dish);
 };
 
 }

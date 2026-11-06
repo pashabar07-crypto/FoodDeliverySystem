@@ -5,9 +5,10 @@
 #include <vector>
 
 namespace FoodDeliverySystem::StringUtils {
+using namespace std;
 
-std::vector<std::string> split(std::string line, char delimiter);
-bool toInt(std::string text, int& result);
-bool toDouble(std::string text, double& result);
+vector<string> split(string line, char delimiter);
+bool toInt(string text, int& result);
+bool toDouble(string text, double& result);
 
 }
