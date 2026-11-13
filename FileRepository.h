@@ -55,7 +55,6 @@ public:
 
     template <typename Compare>
     void sort(Compare compare) {
-        // stable_sort вместо sort: обычное имя sort нашло бы этот же метод
         stable_sort(items.begin(), items.end(), compare);
     }
 

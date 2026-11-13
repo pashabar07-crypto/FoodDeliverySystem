@@ -3,4 +3,4 @@ USER|2|Courier|courier|3934292f373a126b696f|Курьер|Велосипед
 USER|3|Customer|client|39373538302b516868||г. Минск, ул. Платонова, д. 39, кв. 10
 USER|4|Courier|courier2|3934292f373a126b696f|Курьер|Автомобиль
 USER|5|Customer|pasha|6b696f696b||wewew
-USER|6|Customer|pasxa|6b696f696b||
+USER|6|Customer|pasxa|6b696f696b||Пушкина

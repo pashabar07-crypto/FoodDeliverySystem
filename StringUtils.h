@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <exception>
@@ -8,6 +9,7 @@ namespace FoodDeliverySystem::StringUtils {
 using namespace std;
 
 vector<string> split(string line, char delimiter);
+string trim(string text);
 bool toInt(string text, int& result);
 bool toDouble(string text, double& result);
 

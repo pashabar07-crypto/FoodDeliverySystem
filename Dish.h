@@ -14,20 +14,23 @@ class Dish : public Entity {
     string category;
     double price;
     bool isAvailable;
+    string composition;
 
 public:
     Dish();
-    Dish(int id, string name, string category, double price, bool isAvailable);
+    Dish(int id, string name, string category, double price, bool isAvailable, string composition);
 
     string getName() { return name; }
     string getCategory() { return category; }
     double getPrice() { return price; }
     bool getAvailability() { return isAvailable; }
+    string getComposition() { return composition; }
 
     void setName(string newName);
     void setCategory(string newCategory);
     void setPrice(double newPrice);
     void setAvailability(bool newAvailability) { isAvailable = newAvailability; }
+    void setComposition(string newComposition);
 
     string toString() override;
     void save(ostream& out) override;

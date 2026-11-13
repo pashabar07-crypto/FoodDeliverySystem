@@ -32,6 +32,7 @@ class DeliverySystemApp {
     void searchDishes();
     void sortDishes();
     void filterDishes();
+    void showPopularDishes();
     void addDish();
     void editDish();
     void deleteDish();
@@ -48,7 +49,11 @@ class DeliverySystemApp {
     string userDetail(shared_ptr<User> user);
     string userLogin(int id);
 
-    void createOrder(Customer& customer);
+    void menuScreen(Customer& customer, shared_ptr<Order>& cart);
+    void addToCart(Customer& customer, shared_ptr<Order>& cart);
+    void cartMenu(Customer& customer, shared_ptr<Order>& cart);
+    void repeatLastOrder(Customer& customer, shared_ptr<Order>& cart);
+    string chooseExcluded(Dish& dish);
     void showCart(Order& order);
     bool checkoutOrder(shared_ptr<Order> order);
     void writeReceipt(Order& order);

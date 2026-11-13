@@ -1,7 +1,9 @@
 #include "DeliverySystemApp.h"
 
 #include "ConsoleUtils.h"
+#include "StringUtils.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -40,13 +42,20 @@ void DeliverySystemApp::initializeData() {
     }
 
     if (!fs::exists("data/dishes.txt")) {
-        dishesRepo.add(make_shared<Dish>(1, "Пицца Маргарита", "Пицца", 18.50, true));
-        dishesRepo.add(make_shared<Dish>(2, "Пицца Пепперони", "Пицца", 22.00, true));
-        dishesRepo.add(make_shared<Dish>(3, "Салат Цезарь", "Салаты", 14.00, true));
-        dishesRepo.add(make_shared<Dish>(4, "Бургер классический", "Бургеры", 12.50, true));
-        dishesRepo.add(make_shared<Dish>(5, "Суп Том Ям", "Супы", 16.00, false));
-        dishesRepo.add(make_shared<Dish>(6, "Чизкейк", "Десерты", 9.00, true));
-        dishesRepo.add(make_shared<Dish>(7, "Сок апельсиновый", "Напитки", 5.50, true));
+        dishesRepo.add(make_shared<Dish>(1, "Пицца Маргарита", "Пицца", 18.50, true,
+            "томатный соус, моцарелла, базилик, оливковое масло"));
+        dishesRepo.add(make_shared<Dish>(2, "Пицца Пепперони", "Пицца", 22.00, true,
+            "томатный соус, моцарелла, пепперони, орегано"));
+        dishesRepo.add(make_shared<Dish>(3, "Салат Цезарь", "Салаты", 14.00, true,
+            "ромэн, курица, пармезан, сухарики, соус цезарь"));
+        dishesRepo.add(make_shared<Dish>(4, "Бургер классический", "Бургеры", 12.50, true,
+            "булочка, говядина, сыр чеддер, салат, томат, соус"));
+        dishesRepo.add(make_shared<Dish>(5, "Суп Том Ям", "Супы", 16.00, false,
+            "кокосовое молоко, креветки, шампиньоны, лемонграсс, чили"));
+        dishesRepo.add(make_shared<Dish>(6, "Чизкейк", "Десерты", 9.00, true,
+            "сливочный сыр, печенье, сливки, ванильный сахар"));
+        dishesRepo.add(make_shared<Dish>(7, "Сок апельсиновый", "Напитки", 5.50, true,
+            "апельсиновый сок прямого отжима"));
         dishesRepo.saveToFile();
     }
 
@@ -133,17 +142,19 @@ void DeliverySystemApp::openUserMenu(shared_ptr<User> user) {
 
 void DeliverySystemApp::customerMenu(shared_ptr<User> user) {
     auto customer = dynamic_pointer_cast<Customer>(user);
+    shared_ptr<Order> cart;
     bool working = true;
 
     while (working) {
         clearScreen();
         printTitle("МЕНЮ КЛИЕНТА: " + user->getLogin());
         user->showMenu();
-        int choice = readInt("Выберите действие: ", 0, 3);
+        int choice = readInt("Выберите действие: ", 0, 4);
         switch (choice) {
-        case 1: catalogMenu(); break;
-        case 2: createOrder(*customer); pauseScreen(); break;
-        case 3: showCustomerOrders(*customer); pauseScreen(); break;
+        case 1: menuScreen(*customer, cart); break;
+        case 2: cartMenu(*customer, cart); pauseScreen(); break;
+        case 3: repeatLastOrder(*customer, cart); pauseScreen(); break;
+        case 4: showCustomerOrders(*customer); pauseScreen(); break;
         case 0: working = false; break;
         }
     }
@@ -194,18 +205,20 @@ void DeliverySystemApp::catalogMenu() {
     while (working) {
         clearScreen();
         printTitle("КАТАЛОГ БЛЮД");
-        cout << "1. Показать все записи\n"
+        cout << "1. Меню\n"
              << "2. Поиск по названию или категории\n"
              << "3. Сортировка\n"
              << "4. Фильтрация\n"
+             << "5. Популярные блюда\n"
              << "0. Назад\n";
 
-        int choice = readInt("Выберите действие: ", 0, 4);
+        int choice = readInt("Выберите действие: ", 0, 5);
         switch (choice) {
         case 1: showDishes(dishesRepo.getAll()); pauseScreen(); break;
         case 2: searchDishes(); pauseScreen(); break;
         case 3: sortDishes(); pauseScreen(); break;
         case 4: filterDishes(); pauseScreen(); break;
+        case 5: showPopularDishes(); pauseScreen(); break;
         case 0: working = false; break;
         }
     }
@@ -217,18 +230,29 @@ void DeliverySystemApp::showDishes(vector<shared_ptr<Dish>> dishes) {
         return;
     }
 
-    vector<vector<string>> rows;
+    map<string, vector<vector<string>>> sections;
     for (auto& dish : dishes) {
-        rows.push_back({
+        sections[dish->getCategory()].push_back({
             to_string(dish->getId()),
             dish->getName(),
-            dish->getCategory(),
+            dish->getComposition().empty() ? "не указан" : dish->getComposition(),
             money(dish->getPrice()),
             dish->getAvailability() ? "Да" : "Нет"
         });
     }
-    printTable(cout, {"ID", "Название", "Категория", "Цена, руб.", "Доступно"},
-        {6, 28, 16, 12, 14}, rows);
+
+    int compositionWidth = 20;
+    for (auto& dish : dishes) {
+        compositionWidth = max(compositionWidth, static_cast<int>(utf8Length(dish->getComposition())));
+    }
+    compositionWidth = min(compositionWidth, 56);
+
+    vector<pair<string, vector<vector<string>>>> menu;
+    for (auto& section : sections) {
+        menu.push_back({section.first + " (" + to_string(section.second.size()) + ")", section.second});
+    }
+    printMenu(cout, {"ID", "Название", "Состав", "Цена, руб.", "Доступно"},
+        {4, 20, compositionWidth, 10, 9}, menu);
 }
 
 void DeliverySystemApp::searchDishes() {
@@ -260,8 +284,9 @@ void DeliverySystemApp::sortDishes() {
 }
 
 void DeliverySystemApp::filterDishes() {
-    cout << "1. По категории\n2. Только доступные\n3. Только недоступные\n0. Назад\n";
-    int choice = readInt("Вид фильтрации: ", 0, 3);
+    cout << "1. По категории\n2. Только доступные\n3. Только недоступные\n"
+         << "4. По цене\n0. Назад\n";
+    int choice = readInt("Вид фильтрации: ", 0, 4);
     vector<shared_ptr<Dish>> result;
 
     if (choice == 1) {
@@ -274,10 +299,45 @@ void DeliverySystemApp::filterDishes() {
         result = dishesRepo.filter([&](shared_ptr<Dish> dish) {
             return dish->getAvailability() == available;
         });
+    } else if (choice == 4) {
+        double minPrice = readDouble("Цена от, руб.: ", 0, 100000);
+        double maxPrice = readDouble("Цена до, руб.: ", minPrice, 100000);
+        result = dishesRepo.filter([&](shared_ptr<Dish> dish) {
+            return dish->getPrice() >= minPrice && dish->getPrice() <= maxPrice;
+        });
     } else {
         return;
     }
     showDishes(result);
+}
+
+void DeliverySystemApp::showPopularDishes() {
+    clearScreen();
+    printTitle("ПОПУЛЯРНЫЕ БЛЮДА");
+
+    map<int, int> portions;
+    for (auto& order : ordersRepo.getAll()) {
+        for (size_t i = 0; i < order->getDishes().size(); ++i) {
+            portions[order->getDishes()[i]->getId()] += order->getQuantities()[i];
+        }
+    }
+    if (portions.empty()) {
+        printInfo("Данных о заказах пока нет.");
+        return;
+    }
+
+    vector<pair<int, int>> rating(portions.begin(), portions.end());
+    sort(rating.begin(), rating.end(),
+        [](pair<int, int> first, pair<int, int> second) { return first.second > second.second; });
+
+    vector<vector<string>> rows;
+    int count = min(5, static_cast<int>(rating.size()));
+    for (int i = 0; i < count; ++i) {
+        shared_ptr<Dish> dish = dishesRepo.findById(rating[i].first);
+        string name = dish ? dish->getName() : "Блюдо N " + to_string(rating[i].first);
+        rows.push_back({to_string(i + 1), name, to_string(rating[i].second)});
+    }
+    printTable(cout, {"Место", "Блюдо", "Порций"}, {7, 32, 10}, rows);
 }
 
 void DeliverySystemApp::addDish() {
@@ -285,9 +345,10 @@ void DeliverySystemApp::addDish() {
     string category = readNonEmpty("Категория: ");
     double price = readDouble("Цена, руб.: ", 0.01, 100000);
     bool available = readYesNo("Блюдо доступно");
+    string composition = readNonEmpty("Состав блюда: ");
 
     int id = dishesRepo.nextId();
-    dishesRepo.add(make_shared<Dish>(id, name, category, price, available));
+    dishesRepo.add(make_shared<Dish>(id, name, category, price, available, composition));
     dishesRepo.saveToFile();
     printSuccess("Блюдо добавлено с ID " + to_string(id));
 }
@@ -311,13 +372,14 @@ void DeliverySystemApp::editDish() {
     while (working) {
         clearScreen();
         printTitle("РЕДАКТИРОВАНИЕ: " + dish->toString());
-        cout << "1. Название\n2. Категория\n3. Цена\n4. Доступность\n0. Назад\n";
-        int choice = readInt("Что изменить: ", 0, 4);
+        cout << "1. Название\n2. Категория\n3. Цена\n4. Доступность\n5. Состав\n0. Назад\n";
+        int choice = readInt("Что изменить: ", 0, 5);
         switch (choice) {
         case 1: dish->setName(readNonEmpty("Новое название: ")); break;
         case 2: dish->setCategory(readNonEmpty("Новая категория: ")); break;
         case 3: dish->setPrice(readDouble("Новая цена: ", 0.01, 100000)); break;
         case 4: dish->setAvailability(readYesNo("Блюдо доступно")); break;
+        case 5: dish->setComposition(readNonEmpty("Новый состав: ")); break;
         case 0: working = false; break;
         }
 
@@ -434,13 +496,21 @@ string DeliverySystemApp::readDeliveryAddress(Customer& customer) {
 
     while (true) {
         string address = readLine("Адрес доставки (Enter - из профиля): ");
-        if (address.empty()) {
+        bool fromProfile = address.empty();
+        if (fromProfile) {
             address = customer.getAddress();
         }
+
         if (address.empty()) {
             printError("Ошибка: введите адрес доставки");
         } else if (address.find('|') != string::npos) {
             printError("Ошибка: символ | запрещен");
+        } else if (!fromProfile && address != customer.getAddress() &&
+                   readYesNo("Сохранить адрес в профиль")) {
+            customer.setAddress(address);
+            usersRepo.saveToFile();
+            printSuccess("Адрес сохранен в профиле.");
+            return address;
         } else {
             return address;
         }
@@ -580,69 +650,200 @@ void DeliverySystemApp::deleteUser(Admin& admin) {
     }
 }
 
-void DeliverySystemApp::createOrder(Customer& customer) {
-    clearScreen();
-    printTitle("АДРЕС ДОСТАВКИ");
-    string address = readDeliveryAddress(customer);
+string DeliverySystemApp::chooseExcluded(Dish& dish) {
+    vector<string> parts = StringUtils::split(dish.getComposition(), ',');
+    for (auto& part : parts) {
+        part = StringUtils::trim(part);
+    }
+    if (parts.size() < 2) {
+        return "";
+    }
 
-    auto cart = make_shared<Order>(ordersRepo.nextId(), customer.getId());
-    cart->setDeliveryAddress(address);
+    cout << "Состав:";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        cout << " " << (i + 1) << ") " << parts[i];
+    }
+    cout << '\n';
 
+    string answer = readLine("Номера ингредиентов, которые убрать (Enter - ничего): ");
+    if (answer.empty()) {
+        return "";
+    }
+
+    string result;
+    for (auto& number : StringUtils::split(answer, ',')) {
+        int index;
+        if (!StringUtils::toInt(StringUtils::trim(number), index) ||
+            index < 1 || index > static_cast<int>(parts.size())) {
+            printError("Ошибка: неверный номер ингредиента, блюдо добавлено целиком");
+            return "";
+        }
+        if (!result.empty()) {
+            result += ", ";
+        }
+        result += parts[index - 1];
+    }
+    return result;
+}
+
+void DeliverySystemApp::menuScreen(Customer& customer, shared_ptr<Order>& cart) {
     bool working = true;
     while (working) {
         clearScreen();
-        printTitle("ФОРМИРОВАНИЕ ЗАКАЗА");
+        printTitle("МЕНЮ");
+        showDishes(dishesRepo.getAll());
         printInfo("Скидка 10% при стоимости блюд от 50 руб. Доставка 3 руб., бесплатно от 60 руб.");
-        printInfo("Не более " + to_string(Order::maxQuantityPerDish) + " порций одного блюда в заказе.");
-        cout << "\nКОРЗИНА\n"
-             << "1. Добавить блюдо\n2. Удалить позицию\n3. Показать корзину\n"
-             << "4. Перейти к оплате\n0. Отменить заказ\n";
-        int choice = readInt("Выберите действие: ", 0, 4);
+        if (cart && !cart->isEmpty()) {
+            printInfo("В корзине позиций: " + to_string(cart->getDishes().size()));
+        }
 
-        if (choice == 1) {
-            showDishes(dishesRepo.getAll());
-            int dishId = readInt("ID блюда (0 - отмена): ", 0, 1000000);
-            if (dishId != 0) {
-                shared_ptr<Dish> dish = dishesRepo.findById(dishId);
-                if (!dish) {
-                    printError("Блюдо не найдено.");
-                } else {
-                    int quantity = readInt("Количество: ", 1, Order::maxQuantityPerDish);
-                    try {
-                        cart->addDish(dish, quantity);
-                        printSuccess("Позиция добавлена.");
-                    } catch (AppException& error) {
-                        printError(string("Уведомление об отказе: ") + error.what());
-                    }
-                }
-                pauseScreen();
-            }
-        } else if (choice == 2) {
-            int dishId = readInt("ID блюда для удаления из корзины: ", 1, 1000000);
-            if (cart->removeDish(dishId)) {
-                printSuccess("Позиция удалена.");
-            } else {
-                printError("Позиция не найдена.");
-            }
-            pauseScreen();
-        } else if (choice == 3) {
-            showCart(*cart);
-            pauseScreen();
-        } else if (choice == 4) {
-            if (cart->isEmpty()) {
-                printError("Корзина пуста. Сначала добавьте блюда.");
-                pauseScreen();
-            } else if (checkoutOrder(cart)) {
-                ordersRepo.add(cart);
-                ordersRepo.saveToFile();
-                writeReceipt(*cart);
-                printSuccess("Заказ зарегистрирован. Чек сохранен в receipts/order_" + to_string(cart->getId()) + ".txt");
-                working = false;
-            }
-        } else if (readYesNo("Отменить формирование заказа")) {
-            working = false;
+        cout << "1. Добавить блюдо в корзину\n"
+             << "2. Поиск\n"
+             << "3. Сортировка\n"
+             << "4. Фильтрация\n"
+             << "5. Популярные блюда\n"
+             << "0. Назад\n";
+
+        int choice = readInt("Выберите действие: ", 0, 5);
+        switch (choice) {
+        case 1: addToCart(customer, cart); break;
+        case 2: searchDishes(); pauseScreen(); break;
+        case 3: sortDishes(); pauseScreen(); break;
+        case 4: filterDishes(); pauseScreen(); break;
+        case 5: showPopularDishes(); pauseScreen(); break;
+        case 0: working = false; break;
         }
     }
+}
+
+void DeliverySystemApp::addToCart(Customer& customer, shared_ptr<Order>& cart) {
+    int dishId = readInt("ID блюда для добавления (0 - отмена): ", 0, 1000000);
+    if (dishId == 0) {
+        return;
+    }
+
+    shared_ptr<Dish> dish = dishesRepo.findById(dishId);
+    if (!dish) {
+        printError("Блюдо не найдено.");
+        pauseScreen();
+        return;
+    }
+
+    int quantity = readInt("Количество: ", 1, Order::maxQuantityPerDish);
+    string without = chooseExcluded(*dish);
+
+    if (!cart) {
+        cart = make_shared<Order>(ordersRepo.nextId(), customer.getId());
+    }
+    try {
+        cart->addDish(dish, quantity, without);
+        printSuccess("Позиция добавлена в корзину.");
+    } catch (AppException& error) {
+        printError(string("Уведомление об отказе: ") + error.what());
+    }
+    pauseScreen();
+}
+
+void DeliverySystemApp::cartMenu(Customer& customer, shared_ptr<Order>& cart) {
+    while (true) {
+        clearScreen();
+        printTitle("КОРЗИНА");
+        if (!cart || cart->isEmpty()) {
+            printInfo("Корзина пуста. Добавьте блюда в меню.");
+            return;
+        }
+
+        showCart(*cart);
+        cout << "1. Удалить позицию" << endl
+             << "2. Очистить корзину" << endl
+             << "3. Оплатить заказ" << endl
+             << "0. Назад" << endl;
+
+        int choice = readInt("Выберите действие: ", 0, 3);
+        if (choice == 0) {
+            return;
+        }
+
+        if (choice == 1) {
+            int number = readInt("Номер позиции для удаления (0 - отмена): ", 0, 1000);
+            if (number == 0) {
+                continue;
+            }
+            if (cart->removePosition(number - 1)) {
+                printSuccess("Позиция удалена.");
+            } else {
+                printError("Позиция с таким номером не найдена.");
+            }
+            pauseScreen();
+            continue;
+        }
+
+        if (choice == 2) {
+            if (readYesNo("Очистить корзину")) {
+                cart.reset();
+                printSuccess("Корзина очищена.");
+                return;
+            }
+            continue;
+        }
+
+        if (cart->getDeliveryAddress().empty()) {
+            cart->setDeliveryAddress(readDeliveryAddress(customer));
+        }
+        if (!checkoutOrder(cart)) {
+            continue;
+        }
+
+        ordersRepo.add(cart);
+        ordersRepo.saveToFile();
+        writeReceipt(*cart);
+        printSuccess("Заказ зарегистрирован. Чек сохранен в receipts/order_" + to_string(cart->getId()) + ".txt");
+        cart.reset();
+        return;
+    }
+}
+
+void DeliverySystemApp::repeatLastOrder(Customer& customer, shared_ptr<Order>& cart) {
+    clearScreen();
+    printTitle("ПОВТОР ПОСЛЕДНЕГО ЗАКАЗА");
+
+    vector<shared_ptr<Order>> orders = ordersRepo.filter([&](shared_ptr<Order> order) {
+        return order->getCustomerId() == customer.getId();
+    });
+    if (orders.empty()) {
+        printInfo("У вас еще нет заказов.");
+        return;
+    }
+
+    shared_ptr<Order> last = orders.back();
+    printInfo("Повторяется заказ N " + to_string(last->getId()));
+
+    if (!cart) {
+        cart = make_shared<Order>(ordersRepo.nextId(), customer.getId());
+    }
+
+    int skipped = 0;
+    for (size_t i = 0; i < last->getDishes().size(); ++i) {
+        shared_ptr<Dish> dish = dishesRepo.findById(last->getDishes()[i]->getId());
+        if (!dish || !dish->getAvailability()) {
+            ++skipped;
+            continue;
+        }
+        try {
+            cart->addDish(dish, last->getQuantities()[i], last->getExcluded()[i]);
+        } catch (AppException&) {
+            ++skipped;
+        }
+    }
+
+    if (skipped > 0) {
+        printInfo("Пропущено недоступных позиций: " + to_string(skipped));
+    }
+    if (cart->isEmpty()) {
+        printError("Блюда из прошлого заказа сейчас недоступны.");
+        return;
+    }
+    printSuccess("Позиции добавлены в корзину. Откройте пункт Корзина для оплаты.");
 }
 
 void DeliverySystemApp::showCart(Order& order) {
@@ -656,11 +857,17 @@ void DeliverySystemApp::showCart(Order& order) {
         auto& dish = order.getDishes()[i];
         int quantity = order.getQuantities()[i];
         rows.push_back({
-            to_string(dish->getId()), dish->getName(), to_string(quantity),
-            money(dish->getPrice() * quantity)
+            to_string(i + 1), to_string(dish->getId()), dish->getName(),
+            to_string(quantity), money(dish->getPrice() * quantity)
         });
     }
-    printTable(cout, {"ID", "Блюдо", "Кол-во", "Сумма"}, {6, 28, 8, 14}, rows);
+    printTable(cout, {"N", "ID", "Блюдо", "Кол-во", "Сумма"}, {3, 5, 26, 8, 12}, rows);
+    for (size_t i = 0; i < order.getExcluded().size(); ++i) {
+        if (!order.getExcluded()[i].empty()) {
+            cout << "Без ингредиентов: " << order.getDishes()[i]->getName()
+                 << " (" << order.getExcluded()[i] << ")\n";
+        }
+    }
     cout << "Блюда: " << money(order.calculateSubtotal())
          << ", скидка: " << money(order.calculateDiscount())
          << ", доставка: " << money(order.calculateDelivery())
@@ -769,6 +976,16 @@ void DeliverySystemApp::showCustomerOrders(Customer& customer) {
     for (auto& order : orders) {
         if (order->getId() == id) {
             cout << '\n' << *order;
+            if (order->getStatus() == "Подтвержден") {
+                if (readYesNo("Отменить этот заказ")) {
+                    order->setStatus("Отменен");
+                    ordersRepo.saveToFile();
+                    writeReceipt(*order);
+                    printSuccess("Заказ отменен. Чек обновлен.");
+                }
+            } else {
+                printInfo("Отменить можно только подтвержденный заказ без курьера.");
+            }
             return;
         }
     }

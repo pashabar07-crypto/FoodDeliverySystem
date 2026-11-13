@@ -20,8 +20,16 @@ vector<string> split(string line, char delimiter) {
     return parts;
 }
 
-bool toInt(string text, int& result) {
-    try {
+string trim(string text) {
+    size_t first = text.find_first_not_of(" \t\r\n");
+    if (first == string::npos) {
+        return "";
+    }
+    size_t last = text.find_last_not_of(" \t\r\n");
+    return text.substr(first, last - first + 1);
+}
+
+bool toInt(string text, int& result) {    try {
         size_t position = 0;
         result = stoi(text, &position);
         return position == text.size();

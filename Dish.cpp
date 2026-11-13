@@ -34,11 +34,12 @@ double parseDouble(string value) {
 Dish::Dish() : Entity(0), price(0), isAvailable(true) {
 }
 
-Dish::Dish(int id, string name, string category, double price, bool isAvailable)
+Dish::Dish(int id, string name, string category, double price, bool isAvailable, string composition)
     : Entity(id), price(0), isAvailable(isAvailable) {
     setName(name);
     setCategory(category);
     setPrice(price);
+    setComposition(composition);
 }
 
 void Dish::setName(string newName) {
@@ -53,6 +54,13 @@ void Dish::setCategory(string newCategory) {
         throw AppException("Некорректная категория блюда");
     }
     category = newCategory;
+}
+
+void Dish::setComposition(string newComposition) {
+    if (newComposition.find('|') != string::npos) {
+        throw AppException("Некорректный состав блюда");
+    }
+    composition = newComposition;
 }
 
 void Dish::setPrice(double newPrice) {
@@ -70,12 +78,13 @@ string Dish::toString() {
 
 void Dish::save(ostream& out) {
     out << "D|" << id << '|' << name << '|' << category << '|'
-        << fixed << setprecision(2) << price << '|' << (isAvailable ? 1 : 0) << '\n';
+        << fixed << setprecision(2) << price << '|' << (isAvailable ? 1 : 0) << '|'
+        << composition << '\n';
 }
 
 shared_ptr<Dish> Dish::fromLine(string line) {
     vector<string> parts = StringUtils::split(line, '|');
-    if (parts.size() != 6 || parts[0] != "D") {
+    if ((parts.size() != 6 && parts.size() != 7) || parts[0] != "D") {
         throw AppException("Некорректная запись блюда: " + line);
     }
 
@@ -86,7 +95,8 @@ shared_ptr<Dish> Dish::fromLine(string line) {
         throw AppException("Некорректные значения в записи блюда");
     }
 
-    return make_shared<Dish>(dishId, parts[2], parts[3], dishPrice, available == 1);
+    string dishComposition = parts.size() == 7 ? parts[6] : "";
+    return make_shared<Dish>(dishId, parts[2], parts[3], dishPrice, available == 1, dishComposition);
 }
 
 shared_ptr<Dish> Dish::load(istream& in) {

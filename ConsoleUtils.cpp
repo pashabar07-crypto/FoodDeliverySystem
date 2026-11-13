@@ -156,6 +156,58 @@ void printTable(ostream& out, vector<string> headers,
     tableColor(7);
 }
 
+void printMenu(ostream& out, vector<string> headers, vector<int> widths,
+    vector<pair<string, vector<vector<string>>>> sections) {
+    bool colored = &out == &cout;
+    auto tableColor = [&](int color) {
+        if (colored) {
+            setColor(color);
+        }
+    };
+    auto printBorder = [&]() {
+        tableColor(8);
+        out << '+';
+        for (int width : widths) {
+            out << string(width + 2, '-') << '+';
+        }
+        out << '\n';
+    };
+    auto printRow = [&](vector<string> row) {
+        out << '|';
+        for (size_t i = 0; i < headers.size(); ++i) {
+            out << ' ' << fitCell(row[i], widths[i]) << " |";
+        }
+        out << '\n';
+    };
+
+    int innerWidth = static_cast<int>(widths.size()) - 1;
+    for (int width : widths) {
+        innerWidth += width + 2;
+    }
+
+    out << '\n';
+    printBorder();
+    tableColor(11);
+    printRow(headers);
+    printBorder();
+
+    for (auto& section : sections) {
+        tableColor(11);
+        string title = section.first;
+        int left = (innerWidth - static_cast<int>(utf8Length(title))) / 2;
+        out << '|' << string(left, ' ') << title
+            << string(innerWidth - left - static_cast<int>(utf8Length(title)), ' ') << "|\n";
+        printBorder();
+
+        tableColor(7);
+        for (auto& row : section.second) {
+            printRow(row);
+        }
+        printBorder();
+    }
+    tableColor(7);
+}
+
 void clearScreen() {
     if (!consoleOutput()) {
         return;

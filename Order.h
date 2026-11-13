@@ -22,6 +22,7 @@ private:
     int courierId;
     vector<shared_ptr<Dish>> dishes;
     vector<int> quantities;
+    vector<string> excluded;
     unique_ptr<IPaymentMethod> payment;
     string paymentType;
     string status;
@@ -42,6 +43,7 @@ public:
     string getDeliveryAddress() { return deliveryAddress; }
     vector<shared_ptr<Dish>>& getDishes() { return dishes; }
     vector<int>& getQuantities() { return quantities; }
+    vector<string>& getExcluded() { return excluded; }
 
     void setCourierId(int newCourierId) { courierId = newCourierId; }
     void setStatus(string newStatus) { status = newStatus; }
@@ -50,7 +52,8 @@ public:
 
     void addDish(shared_ptr<Dish> dish);
     void addDish(shared_ptr<Dish> dish, int quantity);
-    bool removeDish(int dishId);
+    void addDish(shared_ptr<Dish> dish, int quantity, string without);
+    bool removePosition(int index);
     bool isEmpty() { return dishes.empty(); }
 
     double calculateSubtotal();

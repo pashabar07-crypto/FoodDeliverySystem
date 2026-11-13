@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace FoodDeliverySystem::ConsoleUtils {
@@ -11,6 +12,8 @@ size_t utf8Length(string text);
 string fitCell(string text, size_t width);
 void printTable(ostream& out, vector<string> headers,
     vector<int> widths, vector<vector<string>> rows);
+void printMenu(ostream& out, vector<string> headers, vector<int> widths,
+    vector<pair<string, vector<vector<string>>>> sections);
 void clearScreen();
 void pauseScreen();
 void printTitle(string title);

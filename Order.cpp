@@ -48,10 +48,14 @@ void Order::setPayment(unique_ptr<IPaymentMethod> newPayment) {
 }
 
 void Order::addDish(shared_ptr<Dish> dish) {
-    addDish(dish, 1);
+    addDish(dish, 1, "");
 }
 
 void Order::addDish(shared_ptr<Dish> dish, int quantity) {
+    addDish(dish, quantity, "");
+}
+
+void Order::addDish(shared_ptr<Dish> dish, int quantity, string without) {
     if (!dish) {
         throw AppException("Некорректная позиция заказа");
     }
@@ -63,7 +67,7 @@ void Order::addDish(shared_ptr<Dish> dish, int quantity) {
     }
 
     for (size_t i = 0; i < dishes.size(); ++i) {
-        if (dishes[i]->getId() == dish->getId()) {
+        if (dishes[i]->getId() == dish->getId() && excluded[i] == without) {
             if (quantities[i] + quantity > maxQuantityPerDish) {
                 throw AppException("Общее количество блюда в заказе превышает " + to_string(maxQuantityPerDish));
             }
@@ -74,17 +78,17 @@ void Order::addDish(shared_ptr<Dish> dish, int quantity) {
 
     dishes.push_back(dish);
     quantities.push_back(quantity);
+    excluded.push_back(without);
 }
 
-bool Order::removeDish(int dishId) {
-    for (size_t i = 0; i < dishes.size(); ++i) {
-        if (dishes[i]->getId() == dishId) {
-            dishes.erase(dishes.begin() + i);
-            quantities.erase(quantities.begin() + i);
-            return true;
-        }
+bool Order::removePosition(int index) {
+    if (index < 0 || index >= static_cast<int>(dishes.size())) {
+        return false;
     }
-    return false;
+    dishes.erase(dishes.begin() + index);
+    quantities.erase(quantities.begin() + index);
+    excluded.erase(excluded.begin() + index);
+    return true;
 }
 
 double Order::calculateSubtotal() {
@@ -160,6 +164,13 @@ string Order::buildReceipt() {
     }
     printTable(out, {"Блюдо", "Кол-во", "Цена", "Сумма"}, {26, 8, 12, 14}, rows);
 
+    for (size_t i = 0; i < excluded.size(); ++i) {
+        if (!excluded[i].empty()) {
+            out << "Без ингредиентов: " << dishes[i]->getName()
+                << " (" << excluded[i] << ")\n";
+        }
+    }
+
     out << "Стоимость блюд: " << money(calculateSubtotal()) << " руб.\n"
         << "Скидка: " << money(calculateDiscount()) << " руб.\n"
         << "Доставка: " << money(calculateDelivery()) << " руб.\n"
@@ -185,7 +196,7 @@ void Order::save(ostream& out) {
 
     for (size_t i = 0; i < dishes.size(); ++i) {
         dishes[i]->save(out);
-        out << "QTY|" << quantities[i] << '\n';
+        out << "QTY|" << quantities[i] << '|' << excluded[i] << '\n';
     }
     out << "END_ORDER\n";
 }
@@ -224,16 +235,18 @@ shared_ptr<Order> Order::load(istream& in) {
 
         shared_ptr<Dish> dish = Dish::fromLine(dishLine);
         vector<string> quantityParts = StringUtils::split(quantityLine, '|');
-        if (quantityParts.size() != 2 || quantityParts[0] != "QTY") {
+        if ((quantityParts.size() != 2 && quantityParts.size() != 3) || quantityParts[0] != "QTY") {
             throw AppException("Некорректное количество блюда в заказе");
         }
         int quantity = parseOrderInt(quantityParts[1]);
         if (quantity < 1 || quantity > maxQuantityPerDish) {
             throw AppException("Количество блюда должно быть от 1 до " + to_string(maxQuantityPerDish));
         }
+        string without = quantityParts.size() == 3 ? quantityParts[2] : "";
 
         order->dishes.push_back(dish);
         order->quantities.push_back(quantity);
+        order->excluded.push_back(without);
     }
 
     if (!readDataLine(in, line) || line != "END_ORDER") {
