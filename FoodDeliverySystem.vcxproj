@@ -168,6 +168,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Order.cpp" />
     <ClCompile Include="Payment.cpp" />
+    <ClCompile Include="PromoCode.cpp" />
     <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="User.cpp" />
   </ItemGroup>
@@ -180,6 +181,7 @@
     <ClInclude Include="FileRepository.h" />
     <ClInclude Include="Order.h" />
     <ClInclude Include="Payment.h" />
+    <ClInclude Include="PromoCode.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="User.h" />
   </ItemGroup>

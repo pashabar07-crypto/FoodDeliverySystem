@@ -1,6 +1,7 @@
-USER|1|Admin|admin|3b3f3134306e5269|Администратор|5
-USER|2|Courier|courier|3934292f373a126b696f|Курьер|Велосипед
-USER|3|Customer|client|39373538302b516868||г. Минск, ул. Платонова, д. 39, кв. 10
-USER|4|Courier|courier2|3934292f373a126b696f|Курьер|Автомобиль
-USER|5|Customer|pasha|6b696f696b||wewew
-USER|6|Customer|pasxa|6b696f696b||Пушкина
+USER|1|Admin|admin|3b3f3134306e5269|Администратор|5|admin||1
+USER|2|Courier|courier|3934292f373a126b696f|Курьер|Велосипед|courier||1|1|0|0.0|0
+USER|3|Customer|client|39373538302b516868||г. Минск, ул. Платонова, д. 39, кв. 10|client||1|0.00
+USER|4|Courier|courier2|3934292f373a126b696f|Курьер|Автомобиль|courier2||1|1|0|0.0|0
+USER|5|Customer|pasha|6b696f696b||wewew|pasha||1|0.00
+USER|6|Customer|pasxa|6b696f696b||Пушкина|pasxa||1|0.00
+USER|7|Customer|www|6b696f696b|||qqqqqq|+65685498642964|1|5.00

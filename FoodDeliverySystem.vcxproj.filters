@@ -39,6 +39,9 @@
     <ClCompile Include="Order.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="PromoCode.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
     <ClCompile Include="StringUtils.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -66,6 +69,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Order.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="PromoCode.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="FileRepository.h">

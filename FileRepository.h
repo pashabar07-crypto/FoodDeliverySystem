@@ -11,13 +11,14 @@
 namespace FoodDeliverySystem {
 using namespace std;
 
+// Шаблонный класс-репозиторий для хранения и сохранения сущностей в файл
 template <typename T>
 class FileRepository {
     vector<shared_ptr<T>> items;
     string filename;
 
 public:
-    FileRepository(string filename) : filename(filename) {}
+    explicit FileRepository(const string& filename) : filename(filename) {}
 
     void add(shared_ptr<T> item) {
         items.push_back(item);
@@ -26,12 +27,12 @@ public:
     bool removeById(int id) {
         size_t oldSize = items.size();
         items.erase(remove_if(items.begin(), items.end(),
-            [id](shared_ptr<T> item) { return item->getId() == id; }), items.end());
+            [id](const shared_ptr<T>& item) { return item->getId() == id; }), items.end());
         return oldSize != items.size();
     }
 
-    shared_ptr<T> findById(int id) {
-        for (auto& item : items) {
+    shared_ptr<T> findById(int id) const {
+        for (const auto& item : items) {
             if (item->getId() == id) {
                 return item;
             }
@@ -43,9 +44,13 @@ public:
         return items;
     }
 
-    int nextId() {
+    const vector<shared_ptr<T>>& getAll() const {
+        return items;
+    }
+
+    int nextId() const {
         int result = 1;
-        for (auto& item : items) {
+        for (const auto& item : items) {
             if (item->getId() >= result) {
                 result = item->getId() + 1;
             }
@@ -53,15 +58,17 @@ public:
         return result;
     }
 
+    // Шаблонный метод сортировки записей
     template <typename Compare>
     void sort(Compare compare) {
         stable_sort(items.begin(), items.end(), compare);
     }
 
+    // Шаблонный метод фильтрации записей
     template <typename Predicate>
-    vector<shared_ptr<T>> filter(Predicate predicate) {
+    vector<shared_ptr<T>> filter(Predicate predicate) const {
         vector<shared_ptr<T>> result;
-        for (auto& item : items) {
+        for (const auto& item : items) {
             if (predicate(item)) {
                 result.push_back(item);
             }
@@ -69,13 +76,24 @@ public:
         return result;
     }
 
-    void saveToFile() {
+    // Шаблонный метод поиска первой подходящей записи
+    template <typename Predicate>
+    shared_ptr<T> findFirst(Predicate predicate) const {
+        for (const auto& item : items) {
+            if (predicate(item)) {
+                return item;
+            }
+        }
+        return nullptr;
+    }
+
+    void saveToFile() const {
         ofstream out(filename, ios::trunc);
         if (!out.is_open()) {
             throw FileException("Не удалось открыть файл для записи: " + filename);
         }
 
-        for (auto& item : items) {
+        for (const auto& item : items) {
             item->save(out);
             if (out.fail()) {
                 throw FileException("Ошибка записи в файл: " + filename);

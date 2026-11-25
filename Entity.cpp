@@ -8,4 +8,8 @@ Entity::Entity(int id) : id(id) {
     ++totalCount;
 }
 
+Entity::~Entity() {
+    --totalCount;
+}
+
 }

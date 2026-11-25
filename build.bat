@@ -16,12 +16,12 @@ if %errorlevel%==0 goto mingw
 goto no_compiler
 
 :msvc
-cl /std:c++17 /EHsc /W4 /utf-8 /MT main.cpp Entity.cpp Exceptions.cpp ConsoleUtils.cpp Dish.cpp User.cpp Payment.cpp Order.cpp StringUtils.cpp DeliverySystemApp.cpp /Fe:FoodDelivery.exe
+cl /std:c++17 /EHsc /W4 /utf-8 /MT main.cpp Entity.cpp Exceptions.cpp ConsoleUtils.cpp Dish.cpp PromoCode.cpp User.cpp Payment.cpp Order.cpp StringUtils.cpp DeliverySystemApp.cpp /Fe:FoodDelivery.exe
 if errorlevel 1 goto failed
 goto success
 
 :mingw
-g++ -std=c++17 -Wall -Wextra -pedantic -finput-charset=UTF-8 -fexec-charset=UTF-8 main.cpp Entity.cpp Exceptions.cpp ConsoleUtils.cpp Dish.cpp User.cpp Payment.cpp Order.cpp StringUtils.cpp DeliverySystemApp.cpp -o FoodDelivery.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -finput-charset=UTF-8 -fexec-charset=UTF-8 main.cpp Entity.cpp Exceptions.cpp ConsoleUtils.cpp Dish.cpp PromoCode.cpp User.cpp Payment.cpp Order.cpp StringUtils.cpp DeliverySystemApp.cpp -o FoodDelivery.exe
 if errorlevel 1 goto failed
 goto success
 
